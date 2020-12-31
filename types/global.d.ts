@@ -5,6 +5,7 @@ declare interface Track {
     readonly title: string;
     readonly href: string;
 
+    readonly thumbnail: string;
     readonly artists: { name: string, href: string }[];
 
     readonly token?: string;
@@ -13,7 +14,7 @@ declare interface Track {
 
 declare interface MediaParser {
 
-    async parse(url: string): Promise<Track[]>;
+    async parse(url: string, params?: string[]): Promise<Track[]>;
 
 }
 

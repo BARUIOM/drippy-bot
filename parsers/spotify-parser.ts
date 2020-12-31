@@ -22,8 +22,9 @@ class SpotifyParser implements MediaParser {
                 break;
         }
 
-        return tracks.map(({ id, name: title, external_urls: { spotify: href }, artists }) => ({
+        return tracks.map(({ id, name: title, external_urls: { spotify: href }, album: { images }, artists }) => ({
             id, title, href,
+            thumbnail: images[1].url,
             artists: artists.map((e: any) =>
                 ({ name: e.name, href: e.external_urls.spotify })
             )

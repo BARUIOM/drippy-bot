@@ -37,8 +37,8 @@ class SCParser implements MediaParser {
             }
         }
 
-        return tracks.map(({ id, title, permalink_url: href, user }) => ({
-            id, title, href,
+        return tracks.map(({ id, title, permalink_url: href, artwork_url: thumbnail, user }) => ({
+            id, title, href, thumbnail,
             artists: [{
                 name: user.username,
                 href: user.permalink_url
