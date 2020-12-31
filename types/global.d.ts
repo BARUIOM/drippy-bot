@@ -10,3 +10,9 @@ declare interface Track {
     readonly token?: string;
 
 }
+
+declare interface MediaParser {
+
+    async parse(url: string): Promise<Track[]>;
+
+}
