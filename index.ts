@@ -4,8 +4,9 @@ dotenv.config();
 import { Client } from 'discord.js'
 const client = new Client();
 
+import commands from './command/commands'
+
 const prefix = '$';
-const commands = require('./command/commands.js');
 
 client.on('ready', () => {
     console.log('Bot is active');

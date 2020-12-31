@@ -1,7 +1,11 @@
-import Command from './command.js'
+import Command from './command'
 
 const play = new Command('play', async (client, message, args) => {
 
 });
 
-export default { play };
+const commands: {
+    [name: string]: Command
+} = { play };
+
+export default commands
