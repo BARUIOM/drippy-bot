@@ -4,7 +4,7 @@ dotenv.config();
 import { Client } from 'discord.js'
 const client = new Client();
 
-import commands from './command/commands'
+import commands from './commands'
 
 const prefix = '$';
 
@@ -15,6 +15,7 @@ client.on('ready', () => {
         if (message.channel.type === 'text' && message.content.startsWith(prefix)) {
             const command = message.content.substr(1);
             const args = command.split(/\s+/g);
+            args[0] = args[0].toLowerCase();
 
             if (args[0] in commands) {
                 commands[args[0]].executor(client, message, args);
