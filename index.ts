@@ -14,7 +14,9 @@ client.on('ready', () => {
     client.on('message', message => {
         if (message.channel.type === 'text' && message.content.startsWith(prefix)) {
             const command = message.content.substr(1);
-            const args = command.split(/\s+/g);
+            const args = command.split(/\s+/g)
+                .filter(e => e.length);
+
             args[0] = args[0].toLowerCase();
 
             if (args[0] in commands) {
