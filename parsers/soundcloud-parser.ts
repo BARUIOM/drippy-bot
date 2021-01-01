@@ -1,6 +1,8 @@
 import axios from 'axios'
 import cheerio from 'cheerio'
 
+import { Provider } from '../modules/parse-utils'
+
 class SCParser implements MediaParser {
 
     async parse(url: string): Promise<Track[]> {
@@ -38,6 +40,7 @@ class SCParser implements MediaParser {
         }
 
         return tracks.map(({ id, title, permalink_url: href, artwork_url: thumbnail, user }) => ({
+            provider: Provider.SOUNDCLOUD,
             id, title, href, thumbnail,
             artists: [{
                 name: user.username,

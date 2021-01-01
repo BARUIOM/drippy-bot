@@ -1,6 +1,8 @@
 import axios from 'axios'
 import cheerio from 'cheerio'
 
+import { Provider } from '../modules/parse-utils'
+
 class SpotifyParser implements MediaParser {
 
     async parse(url: string): Promise<Track[]> {
@@ -23,6 +25,7 @@ class SpotifyParser implements MediaParser {
         }
 
         return tracks.map(({ id, name: title, external_urls: { spotify: href }, album: { images }, artists }) => ({
+            provider: Provider.SPOTIFY,
             id, title, href,
             thumbnail: images[1].url,
             artists: artists.map((e: any) =>

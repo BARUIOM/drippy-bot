@@ -1,5 +1,7 @@
 declare interface Track {
 
+    readonly provider: import('../modules/parse-utils').Provider;
+
     readonly id: string;
 
     readonly title: string;
@@ -7,8 +9,6 @@ declare interface Track {
 
     readonly thumbnail: string;
     readonly artists: { name: string, href: string }[];
-
-    readonly token?: string;
 
 }
 
