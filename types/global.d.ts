@@ -18,4 +18,10 @@ declare interface MediaParser {
 
 }
 
-declare type Executor = (client: import('discord.js').Client, message: import('discord.js').Message, args: string[]) => void;
+declare type Executor = (
+    message: import('discord.js').Message,
+    channel: import('discord.js').TextChannel,
+    member: import('discord.js').GuildMember,
+    guild: import('discord.js').Guild,
+    args: string[]
+) => void;

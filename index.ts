@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 dotenv.config();
 
-import { Client } from 'discord.js'
+import { Client, TextChannel } from 'discord.js'
 const client = new Client();
 
 import commands from './commands'
@@ -20,7 +20,9 @@ client.on('ready', () => {
             args[0] = args[0].toLowerCase();
 
             if (args[0] in commands) {
-                commands[args[0]].executor(client, message, args);
+                commands[args[0]].executor(
+                    message, message.channel as TextChannel, message.member!, message.guild!, args
+                );
             }
         }
     });
