@@ -9,7 +9,7 @@ export enum Provider {
 
 export class ParseUtils {
 
-    public static async parse(href: string): Promise<{ name: Provider, tracks: Track[] } | undefined> {
+    public static async parse(href: string): Promise<Track[] | undefined> {
         if (!/^(?:http[s]?:\/\/)/gi.test(href)) {
             href = `https://${href}`;
         }
@@ -21,16 +21,9 @@ export class ParseUtils {
         switch (url.host.toLowerCase()) {
             case 'open.spotify.com':
                 href = `https://open.spotify.com/embed/${params.join('/')}`;
-
-                return {
-                    name: Provider.SPOTIFY,
-                    tracks: await SpotifyParser.parse(href)
-                };
+                return SpotifyParser.parse(href);
             case 'soundcloud.com':
-                return {
-                    name: Provider.SOUNDCLOUD,
-                    tracks: await SCParser.parse(href)
-                };
+                return SCParser.parse(href);
         }
     }
 
