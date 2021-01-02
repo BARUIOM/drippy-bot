@@ -3,6 +3,7 @@ import qs from 'querystring'
 import SoundCloudParser from '../parsers/soundcloud-parser'
 import SpotifyParser from '../parsers/spotify-parser'
 import YoutubeParser from '../parsers/youtube-parser'
+import DeezerParser from '../parsers/deezer-parser'
 
 export enum Provider {
 
@@ -36,6 +37,8 @@ export class ParseUtils {
             case 'open.spotify.com':
                 href = `https://open.spotify.com/embed/${params.join('/')}`;
                 return SpotifyParser.parse(href);
+            case 'deezer.com':
+                return DeezerParser.parse(href, params);
             case 'soundcloud.com':
                 return SoundCloudParser.parse(href);
         }
