@@ -1,6 +1,6 @@
 import qs from 'querystring'
 
-import SCParser from '../parsers/soundcloud-parser'
+import SoundCloudParser from '../parsers/soundcloud-parser'
 import SpotifyParser from '../parsers/spotify-parser'
 import YoutubeParser from '../parsers/youtube-parser'
 
@@ -37,7 +37,7 @@ export class ParseUtils {
                 href = `https://open.spotify.com/embed/${params.join('/')}`;
                 return SpotifyParser.parse(href);
             case 'soundcloud.com':
-                return SCParser.parse(href);
+                return SoundCloudParser.parse(href);
         }
     }
 

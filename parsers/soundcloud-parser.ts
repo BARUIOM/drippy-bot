@@ -3,7 +3,7 @@ import cheerio from 'cheerio'
 
 import { Provider } from '../modules/parse-utils'
 
-class SCParser implements MediaParser {
+class SoundCloudParser implements MediaParser {
 
     async parse(url: string): Promise<Track[]> {
         const tracks: any[] = [];
@@ -51,4 +51,4 @@ class SCParser implements MediaParser {
 
 }
 
-export default new SCParser();
+export default new SoundCloudParser();
