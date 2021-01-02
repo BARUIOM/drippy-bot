@@ -28,11 +28,15 @@ const encrypt = (data: any): string => {
 export default class Drippy {
 
     public static async stream(name: string, data: string): Promise<string> {
-        const { data: object } = await axios.post('/data',
-            { name, data }
-        );
+        if (name !== 'YOUTUBE_MUSIC') {
+            const { data: object } = await axios.post('/data',
+                { name, data }
+            );
 
-        return encrypt(object);
+            return encrypt(object);
+        }
+
+        return encrypt({ id: name, uri: `https://youtu.be/${data}` });
     }
 
 }
