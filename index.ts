@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 dotenv.config();
 
-import { Client, TextChannel } from 'discord.js'
+import { Client, TextChannel, MessageEmbed } from 'discord.js'
 const client = new Client();
 
 import commands from './commands'
@@ -20,9 +20,18 @@ client.on('ready', () => {
             args[0] = args[0].toLowerCase();
 
             if (args[0] in commands) {
-                commands[args[0]].executor(
+                const call = commands[args[0]].executor(
                     message, message.channel as TextChannel, message.member!, message.guild!, args
                 );
+
+                if (call instanceof Promise) {
+                    call.catch((error: Error) => {
+                        const embed = new MessageEmbed()
+                            .setColor('#d50000')
+                            .setDescription(error.message);
+                        message.channel.send(embed);
+                    });
+                }
             }
         }
     });

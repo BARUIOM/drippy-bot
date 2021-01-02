@@ -24,4 +24,4 @@ declare type Executor = (
     member: import('discord.js').GuildMember,
     guild: import('discord.js').Guild,
     args: string[]
-) => void;
+) => Promise<void> | void;
