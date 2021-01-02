@@ -26,6 +26,15 @@ export default class Player {
 
     public add(...tracks: Track[]): void {
         tracks.forEach(e => this._queue.push(e));
+        let message = `Queued ${tracks.length} track`;
+
+        if (tracks.length > 1) {
+            message += 's';
+        }
+
+        const embed = new MessageEmbed()
+            .setDescription(message);
+        this.channel.send(embed);
     }
 
     public remove(index: number): void {
