@@ -18,6 +18,13 @@ class SpotifyParser implements MediaParser {
             case 'track':
                 tracks.push(meta);
                 break;
+            case 'album':
+                const data = [...meta.tracks.items];
+                delete meta.tracks;
+
+                data.map((e: any) => Object.assign(e, { album: meta }))
+                    .forEach((e: any) => tracks.push(e));
+                break;
             case 'playlist':
                 meta.tracks.items.map((e: any) => e['track'])
                     .forEach((e: any) => tracks.push(e));
