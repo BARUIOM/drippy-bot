@@ -36,7 +36,7 @@ export class ParseUtils {
                 return YoutubeParser.parse(href, params);
             case 'open.spotify.com':
                 href = `https://open.spotify.com/embed/${params.join('/')}`;
-                return SpotifyParser.parse(href);
+                return SpotifyParser.parse(href, params);
             case 'deezer.com':
                 return DeezerParser.parse(href, params);
             case 'soundcloud.com':
