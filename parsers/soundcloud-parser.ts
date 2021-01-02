@@ -1,14 +1,14 @@
 import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 
+import SoundCloud from '@drippy-music/soundcloud-api'
+
 import { Provider } from '../modules/parse-utils'
 
 class SoundCloudParser implements MediaParser {
 
     async parse(url: string): Promise<Track[]> {
-        const tracks: any[] = [];
-
-        return axios.get(url).then(({ data }) => {
+        return axios.get(url).then(async ({ data }) => {
             const $ = cheerio.load(data);
 
             const content = $('meta[property="al:ios:url"]')
@@ -21,35 +21,42 @@ class SoundCloudParser implements MediaParser {
                 throw new Error('Invalid URL');
             }
 
-            const script = $('script').last().html() as string;
-            const match = /\[\{.+\](?!.+\1)/gi.exec(script);
+            const src = $('script[src]')
+                .last().prop('src');
+            const client_id = await axios.get(src).then(({ data }) => {
+                const matches = /client_id:"(.+?)"/gi.exec(data);
 
-            if (match !== null && match[0]) {
-                const meta = JSON.parse(match[0]);
-
-                switch (values[1]) {
-                    case 'sounds':
-                        const [track] = meta.find((e: any) => e.id === 19).data;
-                        tracks.push(track);
-                        break;
-                    case 'playlists':
-                        const [playlist] = meta.find((e: any) => e.id === 47).data;
-                        playlist.tracks.forEach((e: any) =>
-                            tracks.push(Object.assign(e, { user: playlist.user }))
-                        );
-                        break;
+                if (matches !== null && matches[1]) {
+                    return matches[1];
                 }
+            });
+
+            if (client_id && client_id.length) {
+                const id = values.pop() as string;
+                const wrapper = new SoundCloud(client_id);
+
+                if (values[1] === 'playlists') {
+                    const playlist = await wrapper.getPlaylist(id);
+                    const ids = (playlist.tracks as any[]).map(e => e.id);
+
+                    const tracks = await wrapper.getTracks(...ids);
+                    return ids.map(e => tracks.find(t => t.id === e));
+                }
+
+                return wrapper.getTracks(id);
             }
 
-            return tracks.map(({ id, title, permalink_url: href, artwork_url: thumbnail, user }) => ({
+            return [];
+        }).then((tracks: any[]) =>
+            tracks.map(({ id, title, permalink_url: href, artwork_url: thumbnail, user }) => ({
                 provider: Provider.SOUNDCLOUD,
                 id, title, href, thumbnail,
                 artists: [{
                     name: user.username,
                     href: user.permalink_url
                 }]
-            }));
-        }).catch((e: AxiosError) => {
+            }))
+        ).catch((e: AxiosError) => {
             if (e.response) {
                 throw new Error('Invalid URL');
             }
