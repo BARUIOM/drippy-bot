@@ -26,11 +26,16 @@ export class ParseUtils {
 
         switch (url.host.toLowerCase()) {
             case 'youtu.be':
+                params.unshift('embed');
             case 'youtube.com':
             case 'music.youtube.com':
-                if (params[0] === 'watch') {
-                    const { v } = qs.parse(url.search.substr(1));
-                    params.push(v as string);
+                if (params[0] === 'embed' && params[1] === 'playlist') {
+                    params.shift();
+                }
+
+                if (['watch', 'playlist'].includes(params[0])) {
+                    const { v, list } = qs.parse(url.search.substr(1));
+                    params.push((v || list) as string);
                 }
 
                 return YoutubeParser.parse(href, params);
