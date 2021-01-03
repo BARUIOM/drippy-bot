@@ -46,4 +46,4 @@ const callback: Executor = async (message, channel, member, guild, args) => {
     channel.send(embed);
 };
 
-export default new Command('queue', callback);
+export default new Command("Displays a list of the server's current queue", callback);

@@ -13,4 +13,4 @@ const callback: Executor = async (message, channel, member, guild, args) => {
     Player.get(guild).skip();
 };
 
-export default new Command('skip', callback);
+export default new Command('Skip the currently playing track', callback);

@@ -1,12 +1,15 @@
 export default class Command {
 
-    public readonly name: string;
+    public readonly description: string;
 
     public readonly executor: Executor
 
-    constructor(name: string, executor: Executor) {
-        this.name = name;
+    public readonly args: string[];
+
+    constructor(description: string, executor: Executor, ...args: string[]) {
+        this.description = description;
         this.executor = executor;
+        this.args = args || [];
     }
 
 }

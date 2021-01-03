@@ -36,4 +36,4 @@ const callback: Executor = async (message, channel, member, guild, args) => {
     }
 };
 
-export default new Command('play', callback);
+export default new Command('Play a song from a valid URL', callback, 'url');
