@@ -27,14 +27,13 @@ export default class Player {
 
     public add(...tracks: Track[]): void {
         tracks.forEach(e => this._queue.push(e));
-        let message = `Queued ${tracks.length} track`;
+        const embed = new MessageEmbed()
+            .setDescription(`Queued ${tracks.length} track`);
 
         if (tracks.length > 1) {
-            message += 's';
+            embed.setDescription(embed.description + 's');
         }
 
-        const embed = new MessageEmbed()
-            .setDescription(message);
         this.channel.send(embed);
     }
 
@@ -76,7 +75,9 @@ export default class Player {
 
     public skip(): void {
         this.connection.dispatcher.end();
-        this.channel.send('Track skipped!');
+        const embed = new MessageEmbed()
+            .setDescription('Track skipped!');
+        this.channel.send(embed);
     }
 
     public pause(): void {
