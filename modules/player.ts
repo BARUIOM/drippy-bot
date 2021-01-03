@@ -14,6 +14,7 @@ export default class Player {
 
     private readonly _queue: Track[] = [];
 
+    private _current?: Track;
     private _playback: boolean = true;
 
     public constructor(guild: Guild, connection: VoiceConnection, channel: TextChannel) {
@@ -41,11 +42,8 @@ export default class Player {
         this._queue.splice(index, 1);
     }
 
-    public get playback(): boolean {
-        return this._playback;
-    }
-
     public async play(track: Track): Promise<void> {
+        this._current = track;
         this._playback = false;
         const token = await Drippy.stream(Provider[track.provider], track.id);
 
@@ -79,6 +77,14 @@ export default class Player {
     public skip(): void {
         this.connection.dispatcher.end();
         this.channel.send('Track skipped!');
+    }
+
+    public get current(): Track | undefined {
+        return this._current;
+    }
+
+    public get playback(): boolean {
+        return this._playback;
     }
 
     public get queue(): Track[] {
