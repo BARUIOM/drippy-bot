@@ -79,6 +79,24 @@ export default class Player {
         this.channel.send('Track skipped!');
     }
 
+    public pause(): void {
+        const dispatcher = this.connection.dispatcher;
+        if (dispatcher.paused) {
+            throw new Error("I'm already paused!");
+        }
+
+        return dispatcher.pause();
+    }
+
+    public resume(): void {
+        const dispatcher = this.connection.dispatcher;
+        if (!dispatcher.paused) {
+            throw new Error("I'm currently not paused!");
+        }
+
+        return dispatcher.resume();
+    }
+
     public get current(): Track | undefined {
         return this._current;
     }
