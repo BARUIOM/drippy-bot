@@ -1,5 +1,5 @@
 import http from 'http'
-import { Guild, MessageEmbed, TextChannel, VoiceConnection } from 'discord.js'
+import { Guild, GuildMember, MessageEmbed, TextChannel, VoiceConnection } from 'discord.js'
 
 import { Provider } from './parse-utils'
 import Drippy from '../modules/drippy-api'
@@ -95,6 +95,10 @@ export default class Player {
         }
 
         return dispatcher.resume();
+    }
+
+    public contains(member: GuildMember): boolean {
+        return member.voice.channel !== null && member.voice.channel.id === this.connection.channel.id;
     }
 
     public get current(): Track | undefined {

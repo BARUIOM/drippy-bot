@@ -3,17 +3,8 @@ import Command from '../modules/command'
 import { ParseUtils } from '../modules/parse-utils'
 
 const callback: Executor = async (message, channel, member, guild, args) => {
-    if (!member.voice.channel) {
-        throw new Error("You're not connected to a voice channel!");
-    }
-
     if (args.length === 1) {
         throw new Error('You have to provide an URL to play');
-    }
-
-    const tracks = await ParseUtils.parse(args[1]);
-    if (tracks === undefined || !tracks.length) {
-        throw new Error("Sorry, but I can't play that");
     }
 
     const player = await (async () => {
@@ -26,6 +17,15 @@ const callback: Executor = async (message, channel, member, guild, args) => {
 
         return Player.get(guild);
     })();
+
+    if (player === undefined || !player.contains(member)) {
+        throw new Error("You're either not connected to a voice channel or it's not the same as me!");
+    }
+
+    const tracks = await ParseUtils.parse(args[1]);
+    if (tracks === undefined || !tracks.length) {
+        throw new Error("Sorry, but I can't play that");
+    }
 
     if (player.playback) {
         player.play(tracks.shift() as Track);
