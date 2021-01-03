@@ -25,3 +25,11 @@ declare type Executor = (
     guild: import('discord.js').Guild,
     args: string[]
 ) => Promise<void> | void;
+
+declare module NodeJS {
+
+    export interface Global {
+        readonly prefix: string;
+    }
+
+}

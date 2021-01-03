@@ -6,13 +6,13 @@ const client = new Client();
 
 import commands from './commands'
 
-const prefix = '$';
+Object.assign(global, { prefix: '$' });
 
 client.on('ready', () => {
     console.log('Bot is active');
 
     client.on('message', message => {
-        if (message.channel.type === 'text' && message.content.startsWith(prefix)) {
+        if (message.channel.type === 'text' && message.content.startsWith(global.prefix)) {
             const command = message.content.substr(1);
             const args = command.split(/\s+/g)
                 .filter(e => e.length);
