@@ -41,36 +41,46 @@ export default class Player {
         this._queue.splice(index, 1);
     }
 
+    private async next(): Promise<void> {
+        if (this._queue.length) {
+            return this.play(this._queue.shift() as Track);
+        }
+
+        this.connection.disconnect();
+        players.delete(this.guild.id);
+    }
+
     public async play(track: Track): Promise<void> {
         this._current = track;
         this._playback = false;
-        const token = await Drippy.stream(Provider[track.provider], track.id);
 
-        http.get(`http://localhost:4770/${token}`)
-            .once('response', response =>
-                this.connection.play(response)
-                    .once('start', () => {
-                        const description = track.artists.map(e =>
-                            `[${e.name}](${e.href})`
-                        ).join(' • ');
+        return Drippy.stream(Provider[track.provider], track.id).then(token => {
+            http.get(`http://localhost:4770/${token}`)
+                .once('response', response =>
+                    this.connection.play(response)
+                        .once('start', () => {
+                            const description = track.artists.map(e =>
+                                `[${e.name}](${e.href})`
+                            ).join(' • ');
 
-                        const embed = new MessageEmbed()
-                            .setURL(track.href)
-                            .setTitle(track.title)
-                            .setThumbnail(track.thumbnail)
-                            .setDescription(description);
+                            const embed = new MessageEmbed()
+                                .setURL(track.href)
+                                .setTitle(track.title)
+                                .setThumbnail(track.thumbnail)
+                                .setDescription(description);
 
-                        this.channel.send(embed);
-                    })
-                    .once('finish', () => {
-                        if (this._queue.length) {
-                            return this.play(this._queue.shift() as Track);
-                        }
+                            this.channel.send(embed);
+                        }).once('finish', () => this.next())
+                );
+        }).catch(() => {
+            const description = `Couldn't play track '[${track.title}](${track.href})'`;
+            const embed = new MessageEmbed()
+                .setColor('#ffab00')
+                .setDescription(description);
 
-                        this.connection.disconnect();
-                        players.delete(this.guild.id);
-                    })
-            );
+            this.channel.send(embed);
+            return this.next();
+        });
     }
 
     public skip(): void {
