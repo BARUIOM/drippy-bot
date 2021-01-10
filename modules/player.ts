@@ -118,6 +118,10 @@ export default class Player {
         return member.voice.channel !== null && member.voice.channel.id === this.connection.channel.id;
     }
 
+    public clear(): void {
+        this._queue.length = 0;
+    }
+
     public get current(): Track | undefined {
         return this._current;
     }
