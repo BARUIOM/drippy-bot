@@ -27,7 +27,7 @@ const callback: Executor = async (message, channel, member, guild, args) => {
         throw new Error("Sorry, but I can't play that");
     }
 
-    if (player.playback) {
+    if (player.current === undefined) {
         player.play(tracks.shift() as Track);
     }
 

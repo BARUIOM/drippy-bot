@@ -15,7 +15,6 @@ export default class Player {
     private readonly _queue: Track[] = [];
 
     private _current?: Track;
-    private _playback: boolean = true;
 
     private timeout!: ReturnType<typeof setTimeout>;
 
@@ -56,7 +55,6 @@ export default class Player {
 
     public async play(track: Track): Promise<void> {
         this._current = track;
-        this._playback = false;
 
         return Drippy.stream(Provider[track.provider], track.id).then(token => {
             http.get(`http://localhost:4770/${token}`)
@@ -147,10 +145,6 @@ export default class Player {
 
     public get current(): Track | undefined {
         return this._current;
-    }
-
-    public get playback(): boolean {
-        return this._playback;
     }
 
     public get queue(): Track[] {
