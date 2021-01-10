@@ -16,4 +16,4 @@ const callback: Executor = async (message, channel, member, guild, args) => {
     message.react('\u2705');
 };
 
-export default new Command('Resume the current playback', callback);
+export default new Command('Resumes the current playback', callback);
