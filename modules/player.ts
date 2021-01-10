@@ -23,6 +23,9 @@ export default class Player {
         this.channel = channel;
 
         players.set(guild.id, this);
+        this.connection.once('disconnect', () =>
+            players.delete(this.guild.id)
+        );
     }
 
     public add(...tracks: Track[]): void {
@@ -47,7 +50,6 @@ export default class Player {
         }
 
         this.connection.disconnect();
-        players.delete(this.guild.id);
     }
 
     public async play(track: Track): Promise<void> {
