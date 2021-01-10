@@ -139,6 +139,19 @@ export default class Player {
         }, 15 * 60 * 1000);
     }
 
+    public shuffle(): void {
+        const shuffled = this._queue.map(a =>
+            ({ sort: Math.random(), value: a })
+        ).sort((a, b) =>
+            a.sort - b.sort
+        ).map(a => a.value);
+
+        this.clear();
+        shuffled.forEach(e =>
+            this._queue.push(e)
+        );
+    }
+
     public get paused(): boolean {
         return this.connection.dispatcher.paused;
     }
