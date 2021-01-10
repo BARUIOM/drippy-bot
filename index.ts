@@ -8,7 +8,7 @@ import commands from './commands'
 
 Object.assign(global, { prefix: '$' });
 
-client.on('ready', () => {
+client.once('ready', () => {
     console.log('Bot is active');
 
     client.on('message', message => {
