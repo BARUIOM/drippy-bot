@@ -85,6 +85,10 @@ export default class Player {
         });
     }
 
+    public stop(): void {
+        this.connection.disconnect();
+    }
+
     public skip(): void {
         this.connection.dispatcher.end();
         const embed = new MessageEmbed()
