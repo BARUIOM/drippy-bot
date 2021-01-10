@@ -5,6 +5,7 @@ import { Client, TextChannel, MessageEmbed } from 'discord.js'
 const client = new Client();
 
 import commands from './commands'
+import Player from './modules/player'
 
 Object.assign(global, { prefix: '$' });
 
@@ -32,6 +33,22 @@ client.once('ready', () => {
                         message.channel.send(embed);
                     });
                 }
+            }
+        }
+    });
+
+    client.on('voiceStateUpdate', (a, b) => {
+        if (Player.has(a.guild) && a.member?.user.id !== client.user?.id) {
+            const player = Player.get(a.guild);
+
+            if (!player.paused) {
+                const channel = (a.channel || b.channel)!;
+
+                if (!channel.members.find(e => !e.user.bot)) {
+                    return player.inactive();
+                }
+
+                return player.active();
             }
         }
     });

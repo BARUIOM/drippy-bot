@@ -17,6 +17,8 @@ export default class Player {
     private _current?: Track;
     private _playback: boolean = true;
 
+    private timeout!: ReturnType<typeof setTimeout>;
+
     public constructor(guild: Guild, connection: VoiceConnection, channel: TextChannel) {
         this.guild = guild;
         this.connection = connection;
@@ -85,8 +87,15 @@ export default class Player {
         });
     }
 
-    public stop(): void {
+    public stop(reason?: string): void {
         this.connection.disconnect();
+
+        if (reason && reason.length) {
+            const embed = new MessageEmbed()
+                .setDescription(reason);
+
+            this.channel.send(embed);
+        }
     }
 
     public skip(): void {
@@ -120,6 +129,20 @@ export default class Player {
 
     public clear(): void {
         this._queue.length = 0;
+    }
+
+    public active(): void {
+        clearTimeout(this.timeout);
+    }
+
+    public inactive(): void {
+        this.timeout = setTimeout(() => {
+            this.stop('Disconnected due to inactivity');
+        }, 15 * 60 * 1000);
+    }
+
+    public get paused(): boolean {
+        return this.connection.dispatcher.paused;
     }
 
     public get current(): Track | undefined {

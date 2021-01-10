@@ -14,6 +14,7 @@ const callback: Executor = async (message, channel, member, guild, args) => {
 
     player.pause();
     message.react('\u2705');
+    return player.inactive();
 };
 
 export default new Command('Pauses the current playback', callback);
