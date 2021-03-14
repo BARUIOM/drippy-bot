@@ -1,14 +1,11 @@
-import os from 'os'
 import fs from 'fs'
-import path from 'path'
 import crypto from 'crypto'
 
 import { RSA_PKCS1_PADDING as padding } from 'constants'
 
 import Axios from 'axios'
 
-const HOME_DIR = os.homedir();
-const PUBLIC_KEY = fs.readFileSync(path.join(HOME_DIR, '.ssh', 'stream.pub'));
+const PUBLIC_KEY = fs.readFileSync(process.env['DRIPPY_PUBLIC_KEY'] as string);
 
 const axios = Axios.create({
     baseURL: 'https://api.drippy.live/api',
