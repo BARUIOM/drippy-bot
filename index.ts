@@ -6,6 +6,7 @@ const client = new Client();
 
 import commands from './commands'
 import Player from './modules/player'
+import Database from './modules/mongodb';
 
 Object.assign(global, { prefix: '$' });
 
@@ -54,4 +55,6 @@ client.once('ready', () => {
     });
 });
 
-client.login(process.env['DISCORD_TOKEN']);
+Database.connect().then(() =>
+    client.login(process.env['DISCORD_TOKEN'])
+);
