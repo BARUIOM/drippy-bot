@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 
-import { Provider } from '../modules/parse-utils'
+import { Source } from 'search-api-core';
 
 const cover = (hash: string, size: number = 120) =>
     `https://e-cdns-images.dzcdn.net/images/cover/${hash}/${size}x${size}.jpg`;
@@ -42,7 +42,7 @@ class DeezerParser implements MediaParser {
             }
 
             return tracks.map(({ SNG_ID: id, SNG_TITLE: title, ARTISTS, ALB_PICTURE }) => ({
-                provider: Provider.DEEZER,
+                provider: Source.DEEZER,
                 id, title, href: `https://deezer.com/track/${id}`,
                 thumbnail: cover(ALB_PICTURE),
                 artists: ARTISTS.map((e: any) => ({

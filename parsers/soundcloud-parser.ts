@@ -2,8 +2,7 @@ import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 
 import SoundCloud from '@drippy-music/soundcloud-api'
-
-import { Provider } from '../modules/parse-utils'
+import { Source } from 'search-api-core';
 
 class SoundCloudParser implements MediaParser {
 
@@ -49,7 +48,7 @@ class SoundCloudParser implements MediaParser {
             return [];
         }).then((tracks: any[]) =>
             tracks.map(({ id, title, permalink_url: href, artwork_url: thumbnail, user }) => ({
-                provider: Provider.SOUNDCLOUD,
+                provider: Source.SOUNDCLOUD,
                 id, title, href, thumbnail,
                 artists: [{
                     name: user.username,

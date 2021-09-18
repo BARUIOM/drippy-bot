@@ -1,6 +1,6 @@
 declare interface Track {
 
-    readonly provider: import('../modules/parse-utils').Provider;
+    readonly provider: import('search-api-core').Source;
 
     readonly id: string;
 

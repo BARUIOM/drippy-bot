@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 
-import { Provider } from '../modules/parse-utils'
+import { Source } from 'search-api-core';
 
 class SpotifyParser implements MediaParser {
 
@@ -36,7 +36,7 @@ class SpotifyParser implements MediaParser {
             }
 
             return tracks.map(({ id, name: title, external_urls: { spotify: href }, album: { images }, artists }) => ({
-                provider: Provider.SPOTIFY,
+                provider: Source.SPOTIFY,
                 id, title, href,
                 thumbnail: images[1].url,
                 artists: artists.map((e: any) =>

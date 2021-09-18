@@ -1,7 +1,7 @@
 import qs from 'querystring'
 
 import axios, { AxiosError } from 'axios'
-import { Provider } from '../modules/parse-utils'
+import { Source } from 'search-api-core';
 
 class YoutubeParser implements MediaParser {
 
@@ -21,7 +21,7 @@ class YoutubeParser implements MediaParser {
                 }
             }).then(({ data }) =>
                 (data.video as any[]).map(({ user_id, thumbnail, encrypted_id: id, title, author }) => ({
-                    provider: Provider.YOUTUBE_MUSIC,
+                    provider: Source.YOUTUBE_MUSIC,
                     id, title, href: `https://youtu.be/${id}`,
                     thumbnail,
                     artists: [{
@@ -55,7 +55,7 @@ class YoutubeParser implements MediaParser {
             const { videoDetails } = JSON.parse(player_response as string);
 
             return [{
-                provider: Provider.YOUTUBE_MUSIC,
+                provider: Source.YOUTUBE_MUSIC,
                 id: videoDetails.videoId,
                 title: videoDetails.title,
                 href: `https://youtu.be/${videoDetails.videoId}`,

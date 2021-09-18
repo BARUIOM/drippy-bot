@@ -5,12 +5,6 @@ import SpotifyParser from '../parsers/spotify-parser'
 import YoutubeParser from '../parsers/youtube-parser'
 import DeezerParser from '../parsers/deezer-parser'
 
-export enum Provider {
-
-    SPOTIFY, DEEZER, YOUTUBE_MUSIC, SOUNDCLOUD
-
-}
-
 export class ParseUtils {
 
     public static async parse(href: string): Promise<Track[] | undefined> {
