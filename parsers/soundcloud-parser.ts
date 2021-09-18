@@ -1,8 +1,10 @@
 import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 
-import SoundCloud from '@drippy-music/soundcloud-api'
-import { Source } from 'search-api-core';
+import { SoundCloud, Source } from 'search-api-core';
+
+const client = new SoundCloud.Api();
+client.setTokenRenewalCallback(SoundCloud.generateClientToken);
 
 class SoundCloudParser implements MediaParser {
 
@@ -20,32 +22,17 @@ class SoundCloudParser implements MediaParser {
                 throw new Error('Invalid URL');
             }
 
-            const src = $('script[src]')
-                .last().prop('src');
-            const client_id = await axios.get(src).then(({ data }) => {
-                const matches = /client_id:"(.+?)"/gi.exec(data);
+            const id = values.pop() as string;
 
-                if (matches !== null && matches[1]) {
-                    return matches[1];
-                }
-            });
+            if (values[1] === 'playlists') {
+                const playlist = await client.getPlaylist(id);
+                const ids = playlist.tracks.map(e => String(e.id));
 
-            if (client_id && client_id.length) {
-                const id = values.pop() as string;
-                const wrapper = new SoundCloud(client_id);
-
-                if (values[1] === 'playlists') {
-                    const playlist = await wrapper.getPlaylist(id);
-                    const ids = (playlist.tracks as any[]).map(e => e.id);
-
-                    const tracks = await wrapper.getTracks(...ids);
-                    return ids.map(e => tracks.find(t => t.id === e));
-                }
-
-                return wrapper.getTracks(id);
+                const tracks = await client.getTracks(...ids);
+                return ids.map(e => tracks.find(t => String(t.id) === e));
             }
 
-            return [];
+            return Promise.all([client.getTrack(id)]);
         }).then((tracks: any[]) =>
             tracks.map(({ id, title, permalink_url: href, artwork_url: thumbnail, user }) => ({
                 provider: Source.SOUNDCLOUD,
