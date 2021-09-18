@@ -27,6 +27,8 @@
         "dotenv": "^8.2.0",
         "erlpack": "github:discord/erlpack",
         "mongodb": "^4.1.2",
+        "search-api-core": "git+ssh://git@github.com/BARUIOM/search-api-core.git",
+        "stream-api-core": "git+ssh://git@github.com/BARUIOM/stream-api-core.git",
         "utf-8-validate": "^5.0.3",
         "zlib-sync": "^0.1.7"
     },
