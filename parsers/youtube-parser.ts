@@ -1,7 +1,11 @@
-import qs from 'querystring'
-
 import axios, { AxiosError } from 'axios'
 import { Source } from 'search-api-core';
+
+if (!process.env['YOUTUBE_DATA_API_KEY']) {
+    throw new Error("The environment variable 'YOUTUBE_DATA_API_KEY' is not set");
+}
+
+const API_KEY = process.env['YOUTUBE_DATA_API_KEY'] as string;
 
 class YoutubeParser implements MediaParser {
 
@@ -40,29 +44,31 @@ class YoutubeParser implements MediaParser {
 
         const video_id = params.pop();
 
-        return axios.get('https://www.youtube.com/get_video_info', {
+        return axios.get('/videos', {
+            baseURL: 'https://www.googleapis.com/youtube/v3',
             params: {
-                video_id,
-                c: 'WEB_EMBEDDED_PLAYER'
+                id: video_id,
+                part: ['id', 'snippet'].join(),
+                key: API_KEY
             }
-        }).then(({ data }) => {
-            const { status, player_response } = qs.parse(decodeURIComponent(data));
-
-            if (status === 'fail') {
-                throw new Error('Invalid URL');
+        }).then(response =>
+            response.data['items'][0]
+        ).then(data => {
+            if (data === undefined) {
+                throw new Error('Invalid video');
             }
 
-            const { videoDetails } = JSON.parse(player_response as string);
+            const { id, snippet: video } = data;
 
             return [{
                 provider: Source.YOUTUBE_MUSIC,
-                id: videoDetails.videoId,
-                title: videoDetails.title,
-                href: `https://youtu.be/${videoDetails.videoId}`,
-                thumbnail: videoDetails.thumbnail.thumbnails[0].url,
+                id: id,
+                title: video.title,
+                href: `https://youtu.be/${id}`,
+                thumbnail: video.thumbnails['default'].url,
                 artists: [{
-                    name: videoDetails.author,
-                    href: `https://youtube.com/channel/${videoDetails.channelId}`
+                    name: video.channelTitle,
+                    href: `https://youtube.com/channel/${video.channelId}`
                 }]
             }];
         });
