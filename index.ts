@@ -31,7 +31,7 @@ client.once('ready', () => {
                     call.catch((error: Error) => {
                         const embed = new MessageEmbed()
                             .setColor('#d50000')
-                            .setDescription(error.message);
+                            .setDescription(error.message || error);
                         message.channel.send(embed);
                     });
                 }
