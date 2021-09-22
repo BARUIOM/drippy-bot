@@ -1,10 +1,9 @@
 import axios, { AxiosError } from 'axios'
 import cheerio from 'cheerio'
 
-import { SoundCloud, Source } from 'search-api-core';
+import { Source } from 'search-api-core';
 
-const client = new SoundCloud.Api();
-client.setTokenRenewalCallback(SoundCloud.generateClientToken);
+import { Fetcher } from '../modules/track-fetcher';
 
 class SoundCloudParser implements MediaParser {
 
@@ -25,14 +24,16 @@ class SoundCloudParser implements MediaParser {
             const id = values.pop() as string;
 
             if (values[1] === 'playlists') {
-                const playlist = await client.getPlaylist(id);
+                const playlist = await Fetcher.SoundCloudClient.getPlaylist(id);
                 const ids = playlist.tracks.map(e => String(e.id));
 
-                const tracks = await client.getTracks(...ids);
+                const tracks = await Fetcher.SoundCloudClient.getTracks(...ids);
                 return ids.map(e => tracks.find(t => String(t.id) === e));
             }
 
-            return Promise.all([client.getTrack(id)]);
+            return Promise.all([
+                Fetcher.SoundCloudClient.getTrack(id)
+            ]);
         }).then((tracks: any[]) =>
             tracks.map(({ id, title, permalink_url: href, artwork_url: thumbnail, user }) => ({
                 provider: Source.SOUNDCLOUD,
