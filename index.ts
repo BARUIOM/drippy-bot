@@ -7,6 +7,7 @@ const client = new Client();
 import commands from './commands'
 import Player from './modules/player'
 import Database from './modules/mongodb';
+import { Fetcher } from './modules/track-fetcher';
 
 Object.assign(global, { prefix: '$' });
 
@@ -55,6 +56,7 @@ client.once('ready', () => {
     });
 });
 
-Database.connect().then(() =>
-    client.login(process.env['DISCORD_TOKEN'])
-);
+Database.connect().then(async () => {
+    await Fetcher.connect();
+    await client.login(process.env['DISCORD_TOKEN']);
+});
