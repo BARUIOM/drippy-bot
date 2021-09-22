@@ -14,7 +14,7 @@ declare interface Track {
 
 declare interface MediaParser {
 
-    async parse(url: string, params?: string[]): Promise<Track[]>;
+    async parse(url: URL): Promise<Track[]>;
 
 }
 

@@ -1,45 +1,39 @@
-import qs from 'querystring'
-
 import SoundCloudParser from '../parsers/soundcloud-parser'
 import SpotifyParser from '../parsers/spotify-parser'
 import YoutubeParser from '../parsers/youtube-parser'
 import DeezerParser from '../parsers/deezer-parser'
 
+const _parseURL = (uri: string): Promise<URL> =>
+    new Promise((resolve, reject) => {
+        try {
+            resolve(new URL(uri));
+        } catch (error: any) {
+            if (error.code === 'ERR_INVALID_URL') {
+                reject('Invalid URL');
+            }
+
+            reject(error.message || error);
+        }
+    });
+
 export class ParseUtils {
 
     public static async parse(href: string): Promise<Track[] | undefined> {
-        href = href.replace(/www[.]/gi, '');
+        const url = await _parseURL(
+            href.replace(/www[.]/gi, '')
+        );
 
-        if (!/^(?:http[s]?:\/\/)/gi.test(href)) {
-            href = `https://${href}`;
-        }
-
-        const url = new URL(href);
-        const params = url.pathname.split('/')
-            .filter(e => e.length);
-
-        switch (url.host.toLowerCase()) {
+        switch (url.hostname.toLowerCase()) {
             case 'youtu.be':
-                params.unshift('embed');
             case 'youtube.com':
             case 'music.youtube.com':
-                if (params[0] === 'embed' && params[1] === 'playlist') {
-                    params.shift();
-                }
-
-                if (['watch', 'playlist'].includes(params[0])) {
-                    const { v, list } = qs.parse(url.search.substr(1));
-                    params.push((v || list) as string);
-                }
-
-                return YoutubeParser.parse(href, params);
+                return YoutubeParser.parse(url);
             case 'open.spotify.com':
-                href = `https://open.spotify.com/embed/${params.join('/')}`;
-                return SpotifyParser.parse(href, params);
+                return SpotifyParser.parse(url);
             case 'deezer.com':
-                return DeezerParser.parse(href, params);
+                return DeezerParser.parse(url);
             case 'soundcloud.com':
-                return SoundCloudParser.parse(href);
+                return SoundCloudParser.parse(url);
         }
     }
 
