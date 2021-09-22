@@ -1,6 +1,7 @@
 .vscode
 .env
 
+/bin
 /dist
 /node_modules
 
