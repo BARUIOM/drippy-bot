@@ -1,10 +1,158 @@
-import http from 'http'
+import { Readable } from 'stream';
 import { Guild, GuildMember, MessageEmbed, TextChannel, VoiceConnection } from 'discord.js'
 
-import { Provider } from './parse-utils'
-import Drippy from '../modules/drippy-api'
+import {
+    Deezer as DeezerStream,
+    SoundCloud as SoundCloudStream,
+    Youtube as YoutubeStream
+} from 'stream-api-core';
+
+import { Source, Deezer, ProviderData } from 'search-api-core';
+
+import Database from './mongodb';
+import { Fetcher } from './track-fetcher';
 
 const players = new Map<string, Player>();
+
+type CachedTrackData = {
+    _id: string,
+    providers: {
+        [source: string]: {
+            uid: string,
+            md5?: string,
+            version?: string
+        }
+    }
+};
+
+const isDeezerData = (data: ProviderData): data is Deezer.Data => 'md5' in data;
+
+const _fetch = async (track: Track): Promise<Readable> => {
+    switch (track.provider) {
+        case Source.SPOTIFY:
+            const collection = Database.Client.db('baruio')
+                .collection<CachedTrackData>('tracks');
+
+            const document = await collection.findOne({ _id: track.id });
+
+            if (document) {
+                const name = Object.keys(document.providers)[0];
+                const data = document.providers[name];
+
+                switch (name) {
+                    case Source[Source.DEEZER]:
+                        return DeezerStream.Player.stream({
+                            uri: Deezer.generateStreamURI(
+                                data.uid,
+                                data.md5 as string,
+                                data.version as string,
+                                Deezer.AudioFormat.MP3_128
+                            ),
+                            key: Deezer.generateBlowfishKey(data.uid)
+                        });
+                    case Source[Source.SOUNDCLOUD]:
+                        return Fetcher.SoundCloudClient.getTrack(data.uid)
+                            .then(track =>
+                                Fetcher.SoundCloudClient.getTrackStreamURL(track)
+                            )
+                            .then(uri => {
+                                if (uri) {
+                                    return SoundCloudStream.Player.stream({ uri });
+                                }
+
+                                throw new Error('Unable to fetch track');
+                            });
+                    case Source[Source.YOUTUBE_MUSIC]:
+                        return YoutubeStream.fetchYoutubeDL()
+                            .then(binaryPath =>
+                                YoutubeStream.Player.stream({
+                                    binaryPath, uri: 'https://youtu.be/' + data.uid
+                                })
+                            );
+                }
+            }
+
+            return Fetcher.Repository.find(track.id)
+                .then(data => {
+                    const { uid } = data;
+
+                    const document: CachedTrackData = {
+                        _id: track.id,
+                        providers: {
+                            [Source[data.source]]: { uid }
+                        }
+                    };
+
+                    if (isDeezerData(data)) {
+                        const { md5, version } = data;
+
+                        Object.assign(
+                            document.providers[Source[Source.DEEZER]],
+                            { md5, version }
+                        );
+                    }
+
+                    return collection.insertOne(document)
+                        .then(() => data);
+                })
+                .then(data => {
+                    const uri = data.uri as string;
+
+                    switch (data.source) {
+                        case Source.DEEZER:
+                            const { key } = data as Deezer.Data;
+
+                            return DeezerStream.Player.stream({
+                                uri, key: key as string
+                            });
+                        case Source.SOUNDCLOUD:
+                            return SoundCloudStream.Player.stream({ uri });
+                        case Source.YOUTUBE_MUSIC:
+                            return YoutubeStream.fetchYoutubeDL()
+                                .then(binaryPath =>
+                                    YoutubeStream.Player.stream({ binaryPath, uri })
+                                );
+                    }
+
+                    throw new Error('Unable to fetch track');
+                });
+        case Source.DEEZER:
+            return Fetcher.DeezerClient.getTrack(track.id)
+                .then(track => ({
+                    uri: Deezer.generateStreamURI(
+                        track.SNG_ID,
+                        track.MD5_ORIGIN,
+                        track.MEDIA_VERSION,
+                        Deezer.AudioFormat.MP3_128
+                    ),
+                    key: Deezer.generateBlowfishKey(
+                        track.SNG_ID
+                    )
+                }))
+                .then(data =>
+                    DeezerStream.Player.stream(data)
+                )
+        case Source.SOUNDCLOUD:
+            return Fetcher.SoundCloudClient.getTrack(track.id)
+                .then(track =>
+                    Fetcher.SoundCloudClient.getTrackStreamURL(track)
+                )
+                .then(uri => {
+                    if (uri) {
+                        return SoundCloudStream.Player.stream({ uri });
+                    }
+
+                    throw new Error('Unable to fetch track');
+                });
+        case Source.YOUTUBE_MUSIC:
+            return YoutubeStream.fetchYoutubeDL()
+                .then(binaryPath =>
+                    YoutubeStream.Player.stream({
+                        binaryPath, uri: 'https://youtu.be/' + track.id
+                    })
+                );
+    }
+};
 
 export default class Player {
 
@@ -56,33 +204,35 @@ export default class Player {
     public async play(track: Track): Promise<void> {
         this._current = track;
 
-        return Drippy.stream(Provider[track.provider], track.id).then(token => {
-            http.get(`http://localhost:4770/${token}`)
-                .once('response', response =>
-                    this.connection.play(response)
-                        .once('start', () => {
-                            const description = track.artists.map(e =>
-                                `[${e.name}](${e.href})`
-                            ).join(' • ');
+        return _fetch(track)
+            .then(stream => {
+                this.connection.play(stream)
+                    .once('start', () => {
+                        const description = track.artists.map(e =>
+                            `[${e.name}](${e.href})`
+                        ).join(' • ');
 
-                            const embed = new MessageEmbed()
-                                .setURL(track.href)
-                                .setTitle(track.title)
-                                .setThumbnail(track.thumbnail)
-                                .setDescription(description);
+                        const embed = new MessageEmbed()
+                            .setURL(track.href)
+                            .setTitle(track.title)
+                            .setThumbnail(track.thumbnail)
+                            .setDescription(description);
 
-                            this.channel.send(embed);
-                        }).once('finish', () => this.next())
-                );
-        }).catch(() => {
-            const description = `Couldn't play track '[${track.title}](${track.href})'`;
-            const embed = new MessageEmbed()
-                .setColor('#ffab00')
-                .setDescription(description);
+                        this.channel.send(embed);
+                    })
+                    .once('finish', () =>
+                        this.next()
+                    );
+            })
+            .catch(error => {
+                const description = `Error on track [${track.title}](${track.href}) - ${error.message || error}`;
+                const embed = new MessageEmbed()
+                    .setColor('#ffab00')
+                    .setDescription(description);
 
-            this.channel.send(embed);
-            return this.next();
-        });
+                this.channel.send(embed);
+                return this.next();
+            });
     }
 
     public stop(reason?: string): void {
