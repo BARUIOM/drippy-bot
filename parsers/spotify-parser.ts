@@ -1,54 +1,61 @@
-import axios, { AxiosError } from 'axios'
-import cheerio from 'cheerio'
-
+import { capitalize } from 'lodash';
 import { Source } from 'search-api-core';
+
+import { Fetcher } from '../modules/track-fetcher';
+
+const _error = (message: string = 'Invalid Spotify URL') => new Error(message);
+
+const _validPath = (url: URL): boolean =>
+    ['track', 'album', 'playlist']
+        .some(e => url.pathname.startsWith('/' + e));
+
+const _fetch = (id: string, type: string): Promise<SpotifyApi.TrackObjectFull[]> => {
+    switch (type) {
+        case 'track':
+            return Fetcher.SpotifyClient.getTrack(id)
+                .then(track => [track]);
+        case 'album':
+            return Fetcher.SpotifyClient.getAlbum(id)
+                .then(({ tracks, ...album }) => tracks.items.map(e =>
+                    ({ album, external_ids: {}, popularity: 0, ...e })
+                ));
+        case 'playlist':
+            return Fetcher.SpotifyClient.getPlaylist(id)
+                .then(playlist => playlist.tracks.items.map(e => e.track));
+    }
+
+    return Promise.resolve([]);
+}
 
 class SpotifyParser implements MediaParser {
 
-    async parse(url: string, params: string[]): Promise<Track[]> {
-        const tracks: any[] = [];
+    async parse(url: URL): Promise<Track[]> {
+        if (!_validPath(url))
+            throw _error();
 
-        if (params.length < 2 || !['track', 'album', 'playlist'].includes(params[0])) {
-            throw new Error('Invalid URL');
-        }
+        const [type, id] = url.pathname.substr(1).split('/');
 
-        return axios.get(url).then(({ data }) => {
-            const $ = cheerio.load(data);
+        if (!id)
+            throw _error();
 
-            const resource = decodeURIComponent($('script#resource').html() as string);
-            const meta = JSON.parse(resource);
-
-            switch (meta.type) {
-                case 'track':
-                    tracks.push(meta);
-                    break;
-                case 'album':
-                    const data = [...meta.tracks.items];
-                    delete meta.tracks;
-
-                    data.map((e: any) => Object.assign(e, { album: meta }))
-                        .forEach((e: any) => tracks.push(e));
-                    break;
-                case 'playlist':
-                    meta.tracks.items.map((e: any) => e['track'])
-                        .forEach((e: any) => tracks.push(e));
-                    break;
-            }
-
-            return tracks.map(({ id, name: title, external_urls: { spotify: href }, album: { images }, artists }) => ({
+        return _fetch(id, type).then(tracks =>
+            tracks.map(track => ({
                 provider: Source.SPOTIFY,
-                id, title, href,
-                thumbnail: images[1].url,
-                artists: artists.map((e: any) =>
-                    ({ name: e.name, href: e.external_urls.spotify })
-                )
-            }));
-        }).catch((e: AxiosError) => {
-            if (e.response) {
-                throw new Error('Invalid URL');
+                id: track.id,
+                title: track.name,
+                href: track.external_urls.spotify,
+                thumbnail: track.album.images[1].url,
+                artists: track.artists.map(e => ({
+                    name: e.name,
+                    href: e.external_urls.spotify
+                }))
+            }))
+        ).catch((e) => {
+            if (e.response && e.response.status === 404) {
+                throw _error(capitalize(type) + ' not found');
             }
 
-            throw e;
+            throw _error();
         });
     }
 
