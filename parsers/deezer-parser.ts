@@ -6,57 +6,69 @@ import { Source } from 'search-api-core';
 const cover = (hash: string, size: number = 120) =>
     `https://e-cdns-images.dzcdn.net/images/cover/${hash}/${size}x${size}.jpg`;
 
+const _error = (message: string = 'Invalid Deezer URL') => new Error(message);
+
+const _validPath = (url: URL): boolean => {
+    const paths = url.pathname.substr(1)
+        .split('/').reverse();
+
+    return ['track', 'album', 'playlist']
+        .includes(paths[1]);
+}
+
 class DeezerParser implements MediaParser {
 
-    async parse(url: string, params: string[]): Promise<Track[]> {
-        const tracks: any[] = [];
-
-        const media_id = params.pop() as string;
-        const media_type = params.pop() as string;
-
-        if (!['track', 'album', 'playlist'].includes(media_type)) {
-            throw new Error('Invalid URL');
+    // TODO: Use Deezer rest API instead of web scrapping
+    async parse(url: URL): Promise<Track[]> {
+        if (!_validPath(url)) {
+            throw _error();
         }
 
-        return axios.get(`https://deezer.com/${media_type}/${media_id}`).then(({ data }) => {
-            const $ = cheerio.load(data);
+        const [media_id, media_type] = url.pathname.substr(1)
+            .split('/').reverse();
 
-            const script = $('#naboo_content script')
-                .last().html() as string;
-            const match = /[{].+[}]/gi.exec(script);
+        return axios.get(`https://deezer.com/${media_type}/${media_id}`)
+            .then(({ data }) => {
+                const $ = cheerio.load(data);
 
-            if (match !== null && match[0]) {
-                const meta = JSON.parse(match[0]);
+                const script = $('#naboo_content script')
+                    .last().html() as string;
+                const match = /[{].+[}]/gi.exec(script);
 
-                switch (media_type) {
-                    case 'track':
-                        tracks.push(meta.DATA);
-                        break;
-                    case 'album':
-                    case 'playlist':
-                        meta.SONGS['data'].forEach((e: any) =>
-                            tracks.push(e)
-                        );
-                        break;
+                if (match !== null && match[0]) {
+                    const meta = JSON.parse(match[0]);
+
+                    switch (media_type) {
+                        case 'track':
+                            return [meta.DATA];
+                        case 'album':
+                        case 'playlist':
+                            return meta.SONGS['data'] as any[];
+                    }
                 }
-            }
 
-            return tracks.map(({ SNG_ID: id, SNG_TITLE: title, ARTISTS, ALB_PICTURE }) => ({
-                provider: Source.DEEZER,
-                id, title, href: `https://deezer.com/track/${id}`,
-                thumbnail: cover(ALB_PICTURE),
-                artists: ARTISTS.map((e: any) => ({
-                    name: e.ART_NAME,
-                    href: `https://deezer.com/artist/${e.ART_ID}`
+                return [];
+            })
+            .then(tracks =>
+                tracks.map(track => ({
+                    provider: Source.DEEZER,
+                    id: track['SNG_ID'],
+                    title: track['SNG_TITLE'],
+                    href: `https://deezer.com/track/${track['SNG_ID']}`,
+                    thumbnail: cover(track['ALB_PICTURE']),
+                    artists: track['ARTISTS'].map((e: any) => ({
+                        name: e.ART_NAME,
+                        href: `https://deezer.com/artist/${e.ART_ID}`
+                    }))
                 }))
-            }));
-        }).catch((e: AxiosError) => {
-            if (e.response) {
-                throw new Error('Invalid URL');
-            }
+            )
+            .catch((e: AxiosError) => {
+                if (e.response) {
+                    throw _error();
+                }
 
-            throw e;
-        });
+                throw e;
+            });
     }
 
 }
