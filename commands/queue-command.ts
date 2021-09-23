@@ -29,7 +29,7 @@ const callback: Executor = async (message, channel, member, guild, args) => {
         embed.addField('\u200B', '\u200B', true);
     }
 
-    const queue = player.queue.slice(0, 10);
+    const queue = player.queue.slice(0, 5);
 
     if (queue.length) {
         embed.addField('Next track:', stringify(queue[0]), true);
